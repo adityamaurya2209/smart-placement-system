@@ -33,6 +33,15 @@ public class DBConnection {
             );
         }
 
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            throw new SQLException(
+                    "MySQL JDBC Driver not found.",
+                    e
+            );
+        }
+
         return DriverManager.getConnection(
                 URL,
                 USER,
