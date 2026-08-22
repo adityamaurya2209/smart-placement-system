@@ -1,0 +1,21 @@
+# Maven
+target/
+cp.txt
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Java
+*.class
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
