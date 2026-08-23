@@ -153,19 +153,29 @@
 
         <h2>Admin Controls</h2>
 
-        <a href="#">Manage Students</a>
+        <a href="admin-students">Manage Students</a>
 
-        <a href="#">Manage Recruiters</a>
+        <a href="admin-recruiters">
+            Manage Recruiters
+        </a>
 
-        <a href="#">Manage Companies</a>
+        <a href="admin-companies">
+            Manage Companies
+        </a>
 
-        <a href="#">Manage Jobs</a>
+        <a href="admin-jobs">
+            Manage Jobs
+        </a>
 
-        <a href="#">View Applications</a>
+        <a href="admin-applications">
+            View Applications
+        </a>
 
-        <a href="#">View Interviews</a>
+        <a href="admin-interviews">
+            View Interviews
+        </a>
 
-        <a class="logout" href="login.html">
+        <a class="logout" href="admin-logout">
             Logout
         </a>
 
