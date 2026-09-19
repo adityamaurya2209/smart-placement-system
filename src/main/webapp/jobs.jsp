@@ -2,95 +2,112 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <title>Available Jobs</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Jobs | Smart Placement System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/inner-ui.css">
 </head>
 
-<body>
+<body class="sp-inner-page">
 
-<h1>Available Jobs</h1>
+<header class="topbar">
+    <div class="topbar-inner">
+        <a class="brand" href="dashboard.html">
+            <span class="brand-mark">SP</span>
+            <span>Smart Placement</span>
+        </a>
 
-<hr>
+        <nav class="nav-links">
+            <a href="student-profile">Profile</a>
+            <a href="jobs">Jobs</a>
+            <a href="my-applications">Applications</a>
+            <a href="interview-schedule">Interviews</a>
+            <a class="nav-logout" href="student-logout">Logout</a>
+        </nav>
+    </div>
+</header>
 
-<c:choose>
+<main class="page-shell">
 
-    <c:when test="${empty jobs}">
-        <p>No jobs are currently available.</p>
-    </c:when>
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Available Jobs</h1>
+            <p class="page-subtitle">Find placement opportunities that match your profile.</p>
+        </div>
+    </div>
 
-    <c:otherwise>
+    <c:choose>
 
-        <c:forEach var="job" items="${jobs}">
+        <c:when test="${empty jobs}">
+            <div class="empty-state">
+                <h2>No Jobs Available</h2>
+                <p>There are currently no open placement opportunities.</p>
+            </div>
+        </c:when>
 
-            <h2>${job.title}</h2>
+        <c:otherwise>
 
-            <p>
-                <strong>Company:</strong>
-                ${job.companyName}
-            </p>
+            <c:forEach var="job" items="${jobs}">
 
-            <p>
-                <strong>Description:</strong>
-                ${job.description}
-            </p>
+                <article class="job-card">
 
-            <p>
-                <strong>Location:</strong>
-                ${job.location}
-            </p>
+                    <h2>${job.title}</h2>
 
-            <p>
-                <strong>Minimum CGPA:</strong>
-                ${job.minimumCgpa}
-            </p>
+                    <div class="company">${job.companyName}</div>
 
-            <p>
-                <strong>Eligible Branch:</strong>
-                ${job.eligibleBranch}
-            </p>
+                    <div class="job-meta">
 
-            <p>
-                <strong>Required Skills:</strong>
-                ${job.requiredSkills}
-            </p>
+                        <div class="job-meta-item">
+                            <strong>Location</strong><br>
+                            ${job.location}
+                        </div>
 
-            <p>
-                <strong>Salary:</strong>
-                ${job.salary}
-            </p>
+                        <div class="job-meta-item">
+                            <strong>Minimum CGPA</strong><br>
+                            ${job.minimumCgpa}
+                        </div>
 
-            <p>
-                <strong>Application Deadline:</strong>
-                ${job.applicationDeadline}
-            </p>
+                        <div class="job-meta-item">
+                            <strong>Eligible Branch</strong><br>
+                            ${job.eligibleBranch}
+                        </div>
 
-            <p>
-                <strong>Status:</strong>
-                ${job.status}
-            </p>
+                        <div class="job-meta-item">
+                            <strong>Salary</strong><br>
+                            ${job.salary}
+                        </div>
 
-            <form action="apply-job" method="post">
+                        <div class="job-meta-item">
+                            <strong>Required Skills</strong><br>
+                            ${job.requiredSkills}
+                        </div>
 
-            <input type="hidden"
-                name="jobId"
-                value="${job.id}">
+                        <div class="job-meta-item">
+                            <strong>Application Deadline</strong><br>
+                            ${job.applicationDeadline}
+                        </div>
 
-            <button type="submit">
-                Apply Now
-            </button>
+                    </div>
 
-            </form>
+                    <a class="button" href="job-details?id=${job.id}">
+                        View Job Details
+                    </a>
 
-            <hr>
+                </article>
 
-        </c:forEach>
+            </c:forEach>
 
-    </c:otherwise>
+        </c:otherwise>
 
-</c:choose>
+    </c:choose>
 
-<a href="dashboard.html">Back to Dashboard</a>
+    <a class="back" href="dashboard.html">&larr; Back to Dashboard</a>
+
+</main>
 
 </body>
 </html>

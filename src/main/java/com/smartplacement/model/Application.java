@@ -6,6 +6,7 @@ import java.sql.Timestamp;
 public class Application {
 
     private long id;
+
     private String jobTitle;
     private String companyName;
     private Timestamp applicationDate;
@@ -21,6 +22,16 @@ public class Application {
     private String skills;
     private String certifications;
     private String resumePath;
+
+    private BigDecimal minimumCgpa;
+    private String eligibleBranch;
+    private String requiredSkills;
+
+    private boolean eligible;
+
+    // --------------------------------------------------
+    // Basic application information
+    // --------------------------------------------------
 
     public long getId() {
         return id;
@@ -70,8 +81,12 @@ public class Application {
         this.matchScore = matchScore;
     }
 
+    // --------------------------------------------------
+    // Student information
+    // --------------------------------------------------
+
     public String getStudentName() {
-    return studentName;
+        return studentName;
     }
 
     public void setStudentName(String studentName) {
@@ -140,5 +155,45 @@ public class Application {
 
     public void setResumePath(String resumePath) {
         this.resumePath = resumePath;
+    }
+
+    // --------------------------------------------------
+    // Job eligibility information
+    // --------------------------------------------------
+
+    public BigDecimal getMinimumCgpa() {
+        return minimumCgpa;
+    }
+
+    public void setMinimumCgpa(BigDecimal minimumCgpa) {
+        this.minimumCgpa = minimumCgpa;
+    }
+
+    public String getEligibleBranch() {
+        return eligibleBranch;
+    }
+
+    public void setEligibleBranch(String eligibleBranch) {
+        this.eligibleBranch = eligibleBranch;
+    }
+
+    public String getRequiredSkills() {
+        return requiredSkills;
+    }
+
+    public void setRequiredSkills(String requiredSkills) {
+        this.requiredSkills = requiredSkills;
+    }
+
+    // --------------------------------------------------
+    // Eligibility
+    // --------------------------------------------------
+
+    public boolean isEligible() {
+        return eligible;
+    }
+
+    public void setEligible(boolean eligible) {
+        this.eligible = eligible;
     }
 }

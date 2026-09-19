@@ -1,4 +1,5 @@
 package com.smartplacement.servlet;
+
 import com.smartplacement.model.Interview;
 import com.smartplacement.util.DBConnection;
 
@@ -24,10 +25,13 @@ public class InterviewScheduleServlet extends HttpServlet {
                           HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Check whether student is logged in
         HttpSession session = request.getSession(false);
 
-        if (session == null || session.getAttribute("userId") == null) {
+        // Allow only logged-in students
+        if (session == null
+                || session.getAttribute("userId") == null
+                || !"STUDENT".equals(session.getAttribute("role"))) {
+
             response.sendRedirect("login.html");
             return;
         }
@@ -35,16 +39,15 @@ public class InterviewScheduleServlet extends HttpServlet {
         long userId = (Long) session.getAttribute("userId");
 
         String sql = """
-                SELECT
-                    i.id,
-                    j.title,
-                    c.company_name,
-                    i.interview_date,
-                    i.interview_time,
-                    i.mode,
-                    i.meeting_link,
-                    i.venue,
-                    i.status
+                SELECT i.id,
+                       j.title,
+                       c.company_name,
+                       i.interview_date,
+                       i.interview_time,
+                       i.mode,
+                       i.meeting_link,
+                       i.venue,
+                       i.status
                 FROM interviews i
                 JOIN applications a
                     ON i.application_id = a.id
@@ -67,7 +70,8 @@ public class InterviewScheduleServlet extends HttpServlet {
 
             statement.setLong(1, userId);
 
-            try (ResultSet resultSet = statement.executeQuery()) {
+            try (ResultSet resultSet =
+                         statement.executeQuery()) {
 
                 while (resultSet.next()) {
 
@@ -113,7 +117,10 @@ public class InterviewScheduleServlet extends HttpServlet {
                 }
             }
 
-            request.setAttribute("interviews", interviews);
+            request.setAttribute(
+                    "interviews",
+                    interviews
+            );
 
             request.getRequestDispatcher(
                     "/interview-schedule.jsp"

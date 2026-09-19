@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 @WebServlet("/update-application-status")
 public class UpdateApplicationStatusServlet extends HttpServlet {
@@ -21,99 +22,214 @@ public class UpdateApplicationStatusServlet extends HttpServlet {
                            HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Check recruiter login
         HttpSession session = request.getSession(false);
 
-        if (session == null || session.getAttribute("userId") == null) {
+        if (session == null
+                || session.getAttribute("userId") == null
+                || !"RECRUITER".equals(session.getAttribute("role"))) {
+
             response.sendRedirect("login.html");
             return;
         }
 
-        long recruiterUserId =
-                (Long) session.getAttribute("userId");
-
         String applicationIdParameter =
                 request.getParameter("applicationId");
 
-        String status =
+        String newStatus =
                 request.getParameter("status");
 
-        String jobIdParameter =
-                request.getParameter("jobId");
+        if (applicationIdParameter == null
+                || applicationIdParameter.isBlank()
+                || newStatus == null
+                || newStatus.isBlank()) {
 
-        if (applicationIdParameter == null ||
-            status == null ||
-            jobIdParameter == null) {
-
-            response.sendRedirect("recruiter-dashboard");
+            response.sendRedirect("applicants?error=invalid");
             return;
         }
 
         long applicationId;
-        long jobId;
 
         try {
 
             applicationId =
                     Long.parseLong(applicationIdParameter);
 
-            jobId =
-                    Long.parseLong(jobIdParameter);
-
         } catch (NumberFormatException e) {
 
-            response.sendRedirect("recruiter-dashboard");
+            response.sendRedirect("applicants?error=invalid");
             return;
         }
 
-        // Only allow valid application statuses
-        if (!status.equals("SHORTLISTED") &&
-            !status.equals("REJECTED") &&
-            !status.equals("INTERVIEW") &&
-            !status.equals("SELECTED")) {
+        newStatus = newStatus.trim().toUpperCase();
 
-            response.sendRedirect(
-                    "applicants?jobId=" + jobId
-            );
+        if (!isValidStatus(newStatus)) {
 
+            response.sendRedirect("applicants?error=invalid-status");
             return;
         }
 
-        String sql = """
-                UPDATE applications a
-                JOIN jobs j ON a.job_id = j.id
-                JOIN companies c ON j.company_id = c.id
-                SET a.status = ?
+        long userId =
+                (Long) session.getAttribute("userId");
+
+        String currentStatus = null;
+
+        String ownershipQuery = """
+                SELECT a.status
+                FROM applications a
+
+                JOIN jobs j
+                    ON a.job_id = j.id
+
+                JOIN companies c
+                    ON j.company_id = c.id
+
                 WHERE a.id = ?
-                  AND a.job_id = ?
                   AND c.user_id = ?
                 """;
 
         try (Connection connection =
-                     DBConnection.getConnection();
-             PreparedStatement statement =
-                     connection.prepareStatement(sql)) {
+                     DBConnection.getConnection()) {
 
-            statement.setString(1, status);
-            statement.setLong(2, applicationId);
-            statement.setLong(3, jobId);
-            statement.setLong(4, recruiterUserId);
+            // ------------------------------------------
+            // Verify recruiter ownership
+            // ------------------------------------------
 
-            statement.executeUpdate();
+            try (PreparedStatement statement =
+                         connection.prepareStatement(
+                                 ownershipQuery)) {
+
+                statement.setLong(1, applicationId);
+                statement.setLong(2, userId);
+
+                try (ResultSet resultSet =
+                             statement.executeQuery()) {
+
+                    if (!resultSet.next()) {
+
+                        response.setStatus(
+                                HttpServletResponse.SC_FORBIDDEN
+                        );
+
+                        response.setContentType(
+                                "text/html;charset=UTF-8"
+                        );
+
+                        response.getWriter().println(
+                                "<h2>You are not authorized to update this application.</h2>"
+                        );
+
+                        return;
+                    }
+
+                    currentStatus =
+                            resultSet.getString("status");
+                }
+            }
+
+            // ------------------------------------------
+            // Validate workflow transition
+            // ------------------------------------------
+
+            if (!isAllowedTransition(
+                    currentStatus,
+                    newStatus
+            )) {
+
+                response.sendRedirect(
+                        "applicants?error=invalid-transition"
+                );
+
+                return;
+            }
+
+            // ------------------------------------------
+            // Update status
+            // ------------------------------------------
+
+            String updateQuery = """
+                    UPDATE applications
+                    SET status = ?
+                    WHERE id = ?
+                    """;
+
+            try (PreparedStatement statement =
+                         connection.prepareStatement(
+                                 updateQuery)) {
+
+                statement.setString(1, newStatus);
+                statement.setLong(2, applicationId);
+
+                int rows =
+                        statement.executeUpdate();
+
+                if (rows == 0) {
+
+                    response.sendRedirect(
+                            "applicants?error=update"
+                    );
+
+                    return;
+                }
+            }
 
             response.sendRedirect(
-                    "applicants?jobId=" + jobId
+                    "applicants?updated=true"
             );
 
         } catch (Exception e) {
 
             e.printStackTrace();
 
-            response.setContentType("text/html");
+            response.setContentType(
+                    "text/html;charset=UTF-8"
+            );
 
             response.getWriter().println(
                     "<h2>Database error occurred.</h2>"
             );
         }
+    }
+
+    private boolean isValidStatus(String status) {
+
+        return status.equals("APPLIED")
+                || status.equals("SHORTLISTED")
+                || status.equals("INTERVIEW")
+                || status.equals("SELECTED")
+                || status.equals("REJECTED");
+    }
+
+    private boolean isAllowedTransition(String current,
+                                        String next) {
+
+        if (current == null) {
+            return false;
+        }
+
+        // No change
+        if (current.equals(next)) {
+            return true;
+        }
+
+        return switch (current) {
+
+            case "APPLIED" ->
+                    next.equals("SHORTLISTED")
+                    || next.equals("REJECTED");
+
+            case "SHORTLISTED" ->
+                    next.equals("INTERVIEW")
+                    || next.equals("REJECTED");
+
+            case "INTERVIEW" ->
+                    next.equals("SELECTED")
+                    || next.equals("REJECTED");
+
+            // Final states
+            case "SELECTED",
+                 "REJECTED" -> false;
+
+            default -> false;
+        };
     }
 }

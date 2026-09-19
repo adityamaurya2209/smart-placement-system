@@ -3,59 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Smart Placement System - Login</title>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        .login-box {
-            background: white;
-            padding: 30px;
-            width: 350px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
-        label {
-            display: block;
-            margin-top: 15px;
-            margin-bottom: 5px;
-        }
-
-        input {
-            width: 100%;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-
-        button {
-            width: 100%;
-            margin-top: 20px;
-            padding: 11px;
-            cursor: pointer;
-        }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body>
+<body class="login-page">
 
-    <div class="login-box">
+    <main class="login-box">
+        <div class="login-brand">
+            <div class="brand-mark">SP</div>
+        </div>
 
         <h1>Smart Placement System</h1>
+        <p class="login-subtitle">
+            Sign in to manage your placement journey.
+        </p>
 
         <form action="login" method="post">
 
@@ -65,6 +27,7 @@
                 id="email"
                 name="email"
                 placeholder="Enter your email"
+                autocomplete="email"
                 required
             >
 
@@ -74,14 +37,14 @@
                 id="password"
                 name="password"
                 placeholder="Enter your password"
+                autocomplete="current-password"
                 required
             >
 
-            <button type="submit">Login</button>
+            <button type="submit">Sign In</button>
 
         </form>
-
-    </div>
+    </main>
 
 </body>
 </html>

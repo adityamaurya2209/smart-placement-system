@@ -1,6 +1,5 @@
 package com.smartplacement.servlet;
 
-import com.smartplacement.model.Job;
 import com.smartplacement.util.DBConnection;
 
 import jakarta.servlet.ServletException;
@@ -14,8 +13,6 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.List;
 
 @WebServlet("/recruiter-dashboard")
 public class RecruiterDashboardServlet extends HttpServlet {
@@ -25,102 +22,141 @@ public class RecruiterDashboardServlet extends HttpServlet {
                           HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Check login
         HttpSession session = request.getSession(false);
 
-        if (session == null || session.getAttribute("userId") == null) {
+        // Only recruiters can access this dashboard
+        if (session == null
+                || session.getAttribute("userId") == null
+                || !"RECRUITER".equals(session.getAttribute("role"))) {
+
             response.sendRedirect("login.html");
             return;
         }
 
         long userId = (Long) session.getAttribute("userId");
 
-        String sql = """
-                SELECT
-                    j.id,
-                    j.title,
-                    j.description,
-                    j.location,
-                    j.minimum_cgpa,
-                    j.eligible_branch,
-                    j.required_skills,
-                    j.salary,
-                    j.application_deadline,
-                    j.status,
-                    c.company_name,
-                    COUNT(a.id) AS applicant_count
-                FROM companies c
-                JOIN jobs j ON c.id = j.company_id
-                LEFT JOIN applications a ON j.id = a.job_id
-                WHERE c.user_id = ?
-                GROUP BY
-                    j.id,
-                    j.title,
-                    j.description,
-                    j.location,
-                    j.minimum_cgpa,
-                    j.eligible_branch,
-                    j.required_skills,
-                    j.salary,
-                    j.application_deadline,
-                    j.status,
-                    c.company_name
-                ORDER BY j.created_at DESC
+        String companyQuery = """
+                SELECT id, company_name
+                FROM companies
+                WHERE user_id = ?
                 """;
 
-        List<Job> jobs = new ArrayList<>();
+        String jobsQuery = """
+                SELECT COUNT(*)
+                FROM jobs j
+                JOIN companies c
+                    ON j.company_id = c.id
+                WHERE c.user_id = ?
+                """;
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        String applicantsQuery = """
+                SELECT COUNT(*)
+                FROM applications a
+                JOIN jobs j
+                    ON a.job_id = j.id
+                JOIN companies c
+                    ON j.company_id = c.id
+                WHERE c.user_id = ?
+                """;
 
-            statement.setLong(1, userId);
+        String interviewsQuery = """
+                SELECT COUNT(*)
+                FROM interviews i
+                JOIN applications a
+                    ON i.application_id = a.id
+                JOIN jobs j
+                    ON a.job_id = j.id
+                JOIN companies c
+                    ON j.company_id = c.id
+                WHERE c.user_id = ?
+                """;
 
-            try (ResultSet resultSet = statement.executeQuery()) {
+        try (Connection connection = DBConnection.getConnection()) {
 
-                while (resultSet.next()) {
+            // Company information
+            try (PreparedStatement statement =
+                         connection.prepareStatement(companyQuery)) {
 
-                    Job job = new Job();
+                statement.setLong(1, userId);
 
-                    job.setId(resultSet.getLong("id"));
-                    job.setTitle(resultSet.getString("title"));
-                    job.setDescription(
-                            resultSet.getString("description")
-                    );
-                    job.setLocation(
-                            resultSet.getString("location")
-                    );
-                    job.setMinimumCgpa(
-                            resultSet.getBigDecimal("minimum_cgpa")
-                    );
-                    job.setEligibleBranch(
-                            resultSet.getString("eligible_branch")
-                    );
-                    job.setRequiredSkills(
-                            resultSet.getString("required_skills")
-                    );
-                    job.setSalary(
-                            resultSet.getString("salary")
-                    );
-                    job.setApplicationDeadline(
-                            resultSet.getDate("application_deadline")
-                    );
-                    job.setStatus(
-                            resultSet.getString("status")
-                    );
-                    job.setCompanyName(
-                            resultSet.getString("company_name")
-                    );
+                try (ResultSet resultSet =
+                             statement.executeQuery()) {
 
-                    // Applicant count
-                    job.setApplicantCount(
-                            resultSet.getInt("applicant_count")
-                    );
+                    if (resultSet.next()) {
 
-                    jobs.add(job);
+                        request.setAttribute(
+                                "companyId",
+                                resultSet.getLong("id")
+                        );
+
+                        request.setAttribute(
+                                "companyName",
+                                resultSet.getString("company_name")
+                        );
+
+                    } else {
+
+                        request.setAttribute(
+                                "companyName",
+                                "Company profile not created"
+                        );
+                    }
                 }
             }
 
-            request.setAttribute("jobs", jobs);
+            // Total jobs
+            try (PreparedStatement statement =
+                         connection.prepareStatement(jobsQuery)) {
+
+                statement.setLong(1, userId);
+
+                try (ResultSet resultSet =
+                             statement.executeQuery()) {
+
+                    if (resultSet.next()) {
+                        request.setAttribute(
+                                "jobCount",
+                                resultSet.getInt(1)
+                        );
+                    }
+                }
+            }
+
+            // Total applicants
+            try (PreparedStatement statement =
+                         connection.prepareStatement(applicantsQuery)) {
+
+                statement.setLong(1, userId);
+
+                try (ResultSet resultSet =
+                             statement.executeQuery()) {
+
+                    if (resultSet.next()) {
+                        request.setAttribute(
+                                "applicantCount",
+                                resultSet.getInt(1)
+                        );
+                    }
+                }
+            }
+
+            // Total interviews
+            try (PreparedStatement statement =
+                         connection.prepareStatement(interviewsQuery)) {
+
+                statement.setLong(1, userId);
+
+                try (ResultSet resultSet =
+                             statement.executeQuery()) {
+
+                    if (resultSet.next()) {
+                        request.setAttribute(
+                                "interviewCount",
+                                resultSet.getInt(1)
+                        );
+                    }
+                }
+            }
 
             request.getRequestDispatcher(
                     "/recruiter-dashboard.jsp"

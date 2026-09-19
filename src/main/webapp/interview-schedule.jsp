@@ -2,89 +2,118 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <title>Interview Schedule</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Schedule | Smart Placement System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/inner-ui.css">
 </head>
 
-<body>
+<body class="sp-inner-page">
 
-<h1>Interview Schedule</h1>
+<header class="topbar">
+    <div class="topbar-inner">
+        <a class="brand" href="dashboard.html">
+            <span class="brand-mark">SP</span>
+            <span>Smart Placement</span>
+        </a>
 
-<hr>
+        <nav class="nav-links">
+            <a href="student-profile">Profile</a>
+            <a href="jobs">Jobs</a>
+            <a href="my-applications">Applications</a>
+            <a href="interview-schedule">Interviews</a>
+            <a class="nav-logout" href="student-logout">Logout</a>
+        </nav>
+    </div>
+</header>
 
-<c:choose>
+<main class="page-shell">
 
-    <c:when test="${empty interviews}">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Interview Schedule</h1>
+            <p class="page-subtitle">Keep track of your placement interviews and meeting details.</p>
+        </div>
+    </div>
 
-        <p>You currently have no scheduled interviews.</p>
+    <c:choose>
 
-    </c:when>
+        <c:when test="${empty interviews}">
+            <div class="empty-state">
+                <h2>No Interviews Scheduled</h2>
+                <p>No interviews have been scheduled for your applications yet.</p>
+            </div>
+        </c:when>
 
-    <c:otherwise>
+        <c:otherwise>
 
-        <c:forEach var="interview" items="${interviews}">
+            <c:forEach var="interview" items="${interviews}">
 
-            <h2>${interview.jobTitle}</h2>
+                <article class="interview">
 
-            <p>
-                <strong>Company:</strong>
-                ${interview.companyName}
-            </p>
+                    <div class="interview-head">
 
-            <p>
-                <strong>Date:</strong>
-                ${interview.interviewDate}
-            </p>
+                        <div>
+                            <h2>${interview.jobTitle}</h2>
+                            <div class="company">${interview.companyName}</div>
+                        </div>
 
-            <p>
-                <strong>Time:</strong>
-                ${interview.interviewTime}
-            </p>
+                        <span class="status ${interview.status}">
+                            ${interview.status}
+                        </span>
 
-            <p>
-                <strong>Mode:</strong>
-                ${interview.mode}
-            </p>
+                    </div>
 
-            <c:if test="${not empty interview.meetingLink}">
+                    <div class="job-meta">
 
-                <p>
-                    <strong>Meeting Link:</strong>
+                        <div class="job-meta-item">
+                            <strong>Date</strong><br>
+                            ${interview.interviewDate}
+                        </div>
 
-                    <a href="${interview.meetingLink}"
-                       target="_blank">
-                        Join Interview
-                    </a>
-                </p>
+                        <div class="job-meta-item">
+                            <strong>Time</strong><br>
+                            ${interview.interviewTime}
+                        </div>
 
-            </c:if>
+                        <div class="job-meta-item">
+                            <strong>Mode</strong><br>
+                            ${interview.mode}
+                        </div>
 
-            <c:if test="${not empty interview.venue}">
+                        <c:if test="${interview.mode == 'OFFLINE' && not empty interview.venue}">
+                            <div class="job-meta-item">
+                                <strong>Venue</strong><br>
+                                ${interview.venue}
+                            </div>
+                        </c:if>
 
-                <p>
-                    <strong>Venue:</strong>
-                    ${interview.venue}
-                </p>
+                    </div>
 
-            </c:if>
+                    <c:if test="${interview.mode == 'ONLINE' && not empty interview.meetingLink}">
+                        <a class="meeting"
+                           href="${interview.meetingLink}"
+                           target="_blank"
+                           rel="noopener noreferrer">
+                            Join Interview
+                        </a>
+                    </c:if>
 
-            <p>
-                <strong>Status:</strong>
-                ${interview.status}
-            </p>
+                </article>
 
-            <hr>
+            </c:forEach>
 
-        </c:forEach>
+        </c:otherwise>
 
-    </c:otherwise>
+    </c:choose>
 
-</c:choose>
+    <a class="back" href="dashboard.html">&larr; Back to Dashboard</a>
 
-<a href="dashboard.html">Back to Dashboard</a>
+</main>
 
 </body>
-
 </html>

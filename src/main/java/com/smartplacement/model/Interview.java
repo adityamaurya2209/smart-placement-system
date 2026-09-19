@@ -6,8 +6,15 @@ import java.sql.Time;
 public class Interview {
 
     private long id;
+    private long applicationId;
+
     private String jobTitle;
     private String companyName;
+
+    private String studentName;
+    private String studentEmail;
+    private String rollNumber;
+
     private Date interviewDate;
     private Time interviewTime;
     private String mode;
@@ -21,6 +28,14 @@ public class Interview {
 
     public void setId(long id) {
         this.id = id;
+    }
+
+    public long getApplicationId() {
+        return applicationId;
+    }
+
+    public void setApplicationId(long applicationId) {
+        this.applicationId = applicationId;
     }
 
     public String getJobTitle() {
@@ -37,6 +52,30 @@ public class Interview {
 
     public void setCompanyName(String companyName) {
         this.companyName = companyName;
+    }
+
+    public String getStudentName() {
+        return studentName;
+    }
+
+    public void setStudentName(String studentName) {
+        this.studentName = studentName;
+    }
+
+    public String getStudentEmail() {
+        return studentEmail;
+    }
+
+    public void setStudentEmail(String studentEmail) {
+        this.studentEmail = studentEmail;
+    }
+
+    public String getRollNumber() {
+        return rollNumber;
+    }
+
+    public void setRollNumber(String rollNumber) {
+        this.rollNumber = rollNumber;
     }
 
     public Date getInterviewDate() {

@@ -7,6 +7,8 @@
 <html lang="en">
 
 <head>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/inner-ui.css">
 
     <meta charset="UTF-8">
 
@@ -143,7 +145,9 @@
 
 </head>
 
-<body>
+<body class="sp-inner-page">
+<nav class="sp-inner-nav"><div class="nav-inner"><a class="sp-brand" href="admin-dashboard"><span class="sp-brand-mark">SP</span>Smart Placement</a><div class="sp-nav-links"><a href="admin-dashboard">Dashboard</a><a href="admin-students">Students</a><a href="admin-recruiters">Recruiters</a><a href="admin-companies">Companies</a><a href="admin-jobs">Jobs</a><a href="admin-applications">Applications</a><a href="admin-interviews">Interviews</a><a class="logout" href="admin-logout">Logout</a></div></div></nav>
+
 
 <header>
 

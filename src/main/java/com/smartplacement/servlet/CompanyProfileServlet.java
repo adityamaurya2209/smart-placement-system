@@ -1,6 +1,5 @@
 package com.smartplacement.servlet;
 
-import com.smartplacement.model.Application;
 import com.smartplacement.util.DBConnection;
 
 import jakarta.servlet.ServletException;
@@ -14,11 +13,9 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.List;
 
-@WebServlet("/my-applications")
-public class MyApplicationsServlet extends HttpServlet {
+@WebServlet("/company-profile")
+public class CompanyProfileServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request,
@@ -27,10 +24,9 @@ public class MyApplicationsServlet extends HttpServlet {
 
         HttpSession session = request.getSession(false);
 
-        // Allow only logged-in students
         if (session == null
                 || session.getAttribute("userId") == null
-                || !"STUDENT".equals(session.getAttribute("role"))) {
+                || !"RECRUITER".equals(session.getAttribute("role"))) {
 
             response.sendRedirect("login.html");
             return;
@@ -39,24 +35,14 @@ public class MyApplicationsServlet extends HttpServlet {
         long userId = (Long) session.getAttribute("userId");
 
         String sql = """
-                SELECT a.id,
-                       j.title,
-                       c.company_name,
-                       a.application_date,
-                       a.status,
-                       a.match_score
-                FROM applications a
-                JOIN students s
-                    ON a.student_id = s.id
-                JOIN jobs j
-                    ON a.job_id = j.id
-                JOIN companies c
-                    ON j.company_id = c.id
-                WHERE s.user_id = ?
-                ORDER BY a.application_date DESC
+                SELECT id,
+                       company_name,
+                       description,
+                       website,
+                       location
+                FROM companies
+                WHERE user_id = ?
                 """;
-
-        List<Application> applications = new ArrayList<>();
 
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement statement =
@@ -67,45 +53,37 @@ public class MyApplicationsServlet extends HttpServlet {
             try (ResultSet resultSet =
                          statement.executeQuery()) {
 
-                while (resultSet.next()) {
+                if (resultSet.next()) {
 
-                    Application application = new Application();
-
-                    application.setId(
+                    request.setAttribute(
+                            "companyId",
                             resultSet.getLong("id")
                     );
 
-                    application.setJobTitle(
-                            resultSet.getString("title")
-                    );
-
-                    application.setCompanyName(
+                    request.setAttribute(
+                            "companyName",
                             resultSet.getString("company_name")
                     );
 
-                    application.setApplicationDate(
-                            resultSet.getTimestamp("application_date")
+                    request.setAttribute(
+                            "description",
+                            resultSet.getString("description")
                     );
 
-                    application.setStatus(
-                            resultSet.getString("status")
+                    request.setAttribute(
+                            "website",
+                            resultSet.getString("website")
                     );
 
-                    application.setMatchScore(
-                            resultSet.getBigDecimal("match_score")
+                    request.setAttribute(
+                            "location",
+                            resultSet.getString("location")
                     );
-
-                    applications.add(application);
                 }
             }
 
-            request.setAttribute(
-                    "applications",
-                    applications
-            );
-
             request.getRequestDispatcher(
-                    "/my-applications.jsp"
+                    "/company-profile.jsp"
             ).forward(request, response);
 
         } catch (Exception e) {

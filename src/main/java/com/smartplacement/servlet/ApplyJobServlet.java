@@ -19,24 +19,25 @@ public class ApplyJobServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request,
-                          HttpServletResponse response)
+                           HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Check login session
         HttpSession session = request.getSession(false);
 
-        if (session == null || session.getAttribute("userId") == null) {
+        // Check whether a student is logged in
+        if (session == null
+                || session.getAttribute("userId") == null
+                || !"STUDENT".equals(session.getAttribute("role"))) {
+
             response.sendRedirect("login.html");
             return;
         }
 
-        // Get logged-in user's ID
         long userId = (Long) session.getAttribute("userId");
 
-        // Get job ID from the form
         String jobIdParameter = request.getParameter("jobId");
 
-        if (jobIdParameter == null || jobIdParameter.isEmpty()) {
+        if (jobIdParameter == null || jobIdParameter.isBlank()) {
             response.sendRedirect("jobs");
             return;
         }
@@ -53,31 +54,38 @@ public class ApplyJobServlet extends HttpServlet {
         String studentQuery =
                 "SELECT id FROM students WHERE user_id = ?";
 
+        String jobQuery =
+                "SELECT id FROM jobs WHERE id = ? AND status = 'OPEN'";
+
         String duplicateQuery =
                 "SELECT id FROM applications " +
                 "WHERE student_id = ? AND job_id = ?";
 
         String insertQuery =
-                "INSERT INTO applications " +
-                "(student_id, job_id) VALUES (?, ?)";
+                "INSERT INTO applications (student_id, job_id) " +
+                "VALUES (?, ?)";
 
         try (Connection connection = DBConnection.getConnection()) {
 
-            // Find student ID
             long studentId;
 
+            // Find the student's database ID
             try (PreparedStatement statement =
                          connection.prepareStatement(studentQuery)) {
 
                 statement.setLong(1, userId);
 
-                try (ResultSet resultSet = statement.executeQuery()) {
+                try (ResultSet resultSet =
+                             statement.executeQuery()) {
 
                     if (!resultSet.next()) {
+
                         response.setContentType("text/html");
+
                         response.getWriter().println(
                                 "<h2>Student profile not found.</h2>"
                         );
+
                         return;
                     }
 
@@ -85,14 +93,41 @@ public class ApplyJobServlet extends HttpServlet {
                 }
             }
 
-            // Check if already applied
+            // Check whether the job exists and is still open
+            try (PreparedStatement statement =
+                         connection.prepareStatement(jobQuery)) {
+
+                statement.setLong(1, jobId);
+
+                try (ResultSet resultSet =
+                             statement.executeQuery()) {
+
+                    if (!resultSet.next()) {
+
+                        response.setContentType("text/html");
+
+                        response.getWriter().println(
+                                "<h2>This job is not available for application.</h2>"
+                        );
+
+                        response.getWriter().println(
+                                "<br><a href='jobs'>Back to Jobs</a>"
+                        );
+
+                        return;
+                    }
+                }
+            }
+
+            // Check whether the student has already applied
             try (PreparedStatement statement =
                          connection.prepareStatement(duplicateQuery)) {
 
                 statement.setLong(1, studentId);
                 statement.setLong(2, jobId);
 
-                try (ResultSet resultSet = statement.executeQuery()) {
+                try (ResultSet resultSet =
+                             statement.executeQuery()) {
 
                     if (resultSet.next()) {
 
@@ -103,7 +138,7 @@ public class ApplyJobServlet extends HttpServlet {
                         );
 
                         response.getWriter().println(
-                                "<a href='jobs'>Back to Jobs</a>"
+                                "<br><a href='my-applications'>View My Applications</a>"
                         );
 
                         return;
@@ -111,7 +146,7 @@ public class ApplyJobServlet extends HttpServlet {
                 }
             }
 
-            // Insert application
+            // Submit the application
             try (PreparedStatement statement =
                          connection.prepareStatement(insertQuery)) {
 
@@ -121,19 +156,9 @@ public class ApplyJobServlet extends HttpServlet {
                 statement.executeUpdate();
             }
 
-            // Application successful
-            response.setContentType("text/html");
-
-            response.getWriter().println(
-                    "<h1>Application Submitted Successfully!</h1>"
-            );
-
-            response.getWriter().println(
-                    "<p>Your application has been submitted.</p>"
-            );
-
-            response.getWriter().println(
-                    "<a href='jobs'>Back to Jobs</a>"
+            // Redirect after successful application
+            response.sendRedirect(
+                    "my-applications?success=true"
             );
 
         } catch (Exception e) {

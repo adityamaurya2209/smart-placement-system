@@ -14,11 +14,9 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.List;
 
-@WebServlet("/jobs")
-public class JobsServlet extends HttpServlet {
+@WebServlet("/job-details")
+public class JobDetailsServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request,
@@ -27,12 +25,27 @@ public class JobsServlet extends HttpServlet {
 
         HttpSession session = request.getSession(false);
 
-        // Allow only logged-in students
         if (session == null
                 || session.getAttribute("userId") == null
                 || !"STUDENT".equals(session.getAttribute("role"))) {
 
             response.sendRedirect("login.html");
+            return;
+        }
+
+        String jobIdParameter = request.getParameter("id");
+
+        if (jobIdParameter == null || jobIdParameter.isBlank()) {
+            response.sendRedirect("jobs");
+            return;
+        }
+
+        long jobId;
+
+        try {
+            jobId = Long.parseLong(jobIdParameter);
+        } catch (NumberFormatException e) {
+            response.sendRedirect("jobs");
             return;
         }
 
@@ -50,18 +63,31 @@ public class JobsServlet extends HttpServlet {
                        c.company_name
                 FROM jobs j
                 JOIN companies c ON j.company_id = c.id
-                WHERE j.status = 'OPEN'
-                ORDER BY j.created_at DESC
+                WHERE j.id = ?
                 """;
-
-        List<Job> jobs = new ArrayList<>();
 
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement statement =
-                     connection.prepareStatement(sql);
-             ResultSet resultSet = statement.executeQuery()) {
+                     connection.prepareStatement(sql)) {
 
-            while (resultSet.next()) {
+            statement.setLong(1, jobId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+
+                if (!resultSet.next()) {
+
+                    response.setContentType("text/html");
+
+                    response.getWriter().println(
+                            "<h2>Job not found.</h2>"
+                    );
+
+                    response.getWriter().println(
+                            "<a href='jobs'>Back to Jobs</a>"
+                    );
+
+                    return;
+                }
 
                 Job job = new Job();
 
@@ -109,14 +135,12 @@ public class JobsServlet extends HttpServlet {
                         resultSet.getString("company_name")
                 );
 
-                jobs.add(job);
+                request.setAttribute("job", job);
+
+                request.getRequestDispatcher(
+                        "/job-details.jsp"
+                ).forward(request, response);
             }
-
-            request.setAttribute("jobs", jobs);
-
-            request.getRequestDispatcher(
-                    "/jobs.jsp"
-            ).forward(request, response);
 
         } catch (Exception e) {
 

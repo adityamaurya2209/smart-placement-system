@@ -1,37 +1,75 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <title>Smart Placement System - Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard | Smart Placement System</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
 
-    <h1>Smart Placement System</h1>
+<header class="topbar">
+    <div class="topbar-inner">
+        <a class="brand" href="dashboard.html">
+            <span class="brand-mark">SP</span>
+            <span>Smart Placement</span>
+        </a>
 
-    <h2>Welcome to Dashboard</h2>
+        <nav class="nav-links">
+            <a href="student-profile">Profile</a>
+            <a href="jobs">Jobs</a>
+            <a href="my-applications">Applications</a>
+            <a href="interview-schedule">Interviews</a>
+            <a class="nav-logout" href="student-logout">Logout</a>
+        </nav>
+    </div>
+</header>
 
-    <p>You have successfully logged in!</p>
+<main class="page-shell">
 
-    <hr>
+    <section class="dashboard-hero">
+        <h1>Student Dashboard</h1>
+        <p>
+            Welcome to Smart Placement System. Explore opportunities,
+            track your applications, and stay updated with your interviews.
+        </p>
+    </section>
 
-    <h3>Student Menu</h3>
+    <section class="dashboard-menu">
 
-    <ul>
-        <li>
-        <a href="student-profile">View Profile</a>
-        </li>
-        <li>
-        <a href="jobs">View Jobs</a>
-        </li>
-        <li>
-        <a href="my-applications">My Applications</a>
-        </li>
-        <li>
-            <a href="interview-schedule">
-                Interview Schedule
-            </a>
-        </li>
-    </ul>
+        <a class="card dashboard-card" href="student-profile">
+            <span class="card-icon">👤</span>
+            <h2>My Profile</h2>
+            <p>View your academic and personal profile information.</p>
+        </a>
+
+        <a class="card dashboard-card" href="jobs">
+            <span class="card-icon">💼</span>
+            <h2>Browse Jobs</h2>
+            <p>Explore available placement opportunities and job details.</p>
+        </a>
+
+        <a class="card dashboard-card" href="my-applications">
+            <span class="card-icon">📋</span>
+            <h2>My Applications</h2>
+            <p>Track your applications and view their current status.</p>
+        </a>
+
+        <a class="card dashboard-card" href="interview-schedule">
+            <span class="card-icon">📅</span>
+            <h2>Interview Schedule</h2>
+            <p>View upcoming and previous interview information.</p>
+        </a>
+
+    </section>
+
+    <div class="dashboard-footer">
+        <a class="logout" href="student-logout">Logout</a>
+    </div>
+
+</main>
 
 </body>
 </html>

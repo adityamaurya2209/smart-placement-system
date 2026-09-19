@@ -11,307 +11,298 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Date;
 import java.sql.Time;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @WebServlet("/schedule-interview")
 public class ScheduleInterviewServlet extends HttpServlet {
 
     @Override
-    protected void doPost(HttpServletRequest request,
-                           HttpServletResponse response)
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Check recruiter login
         HttpSession session = request.getSession(false);
 
-        if (session == null ||
-            session.getAttribute("userId") == null) {
-
-            response.sendRedirect("login.html");
+        if (session == null || !"RECRUITER".equals(session.getAttribute("role"))) {
+            response.sendRedirect(request.getContextPath() + "/login.html");
             return;
         }
 
-        long recruiterUserId =
-                (Long) session.getAttribute("userId");
+        String applicationId = request.getParameter("applicationId");
 
-        String applicationIdParameter =
-                request.getParameter("applicationId");
+        if (applicationId == null || applicationId.trim().isEmpty()) {
+            response.sendRedirect(request.getContextPath() + "/applicants?error=invalid-id");
+            return;
+        }
 
-        String jobIdParameter =
-                request.getParameter("jobId");
+        try {
+            Long.parseLong(applicationId);
+        } catch (NumberFormatException e) {
+            response.sendRedirect(request.getContextPath() + "/applicants?error=invalid-id");
+            return;
+        }
 
-        String interviewDate =
-                request.getParameter("interviewDate");
+        request.setAttribute("applicationId", applicationId);
+        request.getRequestDispatcher("/schedule-interview.jsp").forward(request, response);
+    }
 
-        String interviewTime =
-                request.getParameter("interviewTime");
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
-        String mode =
-                request.getParameter("mode");
+        HttpSession session = request.getSession(false);
 
-        String meetingLink =
-                request.getParameter("meetingLink");
+        if (session == null || !"RECRUITER".equals(session.getAttribute("role"))) {
+            response.sendRedirect(request.getContextPath() + "/login.html");
+            return;
+        }
 
-        String venue =
-                request.getParameter("venue");
+        String applicationIdParam = request.getParameter("applicationId");
+        String interviewDateParam = request.getParameter("interviewDate");
+        String interviewTimeParam = request.getParameter("interviewTime");
+        String mode = request.getParameter("mode");
+        String meetingLink = request.getParameter("meetingLink");
+        String venue = request.getParameter("venue");
 
-        // Basic validation
-        if (applicationIdParameter == null ||
-            jobIdParameter == null ||
-            interviewDate == null ||
-            interviewTime == null ||
-            mode == null) {
-
-            response.sendRedirect(
-                    "applicants?jobId=" + jobIdParameter
-            );
-
+        if (applicationIdParam == null || applicationIdParam.trim().isEmpty()) {
+            response.sendRedirect(request.getContextPath() + "/applicants?error=invalid-id");
             return;
         }
 
         long applicationId;
-        long jobId;
 
         try {
-
-            applicationId =
-                    Long.parseLong(applicationIdParameter);
-
-            jobId =
-                    Long.parseLong(jobIdParameter);
-
+            applicationId = Long.parseLong(applicationIdParam);
         } catch (NumberFormatException e) {
-
-            response.sendRedirect(
-                    "recruiter-dashboard"
-            );
-
+            response.sendRedirect(request.getContextPath() + "/applicants?error=invalid-id");
             return;
         }
 
-        // Only allow valid interview modes
-        if (!mode.equals("ONLINE") &&
-            !mode.equals("OFFLINE")) {
+        mode = mode == null ? "" : mode.trim().toUpperCase();
+        meetingLink = meetingLink == null ? "" : meetingLink.trim();
+        venue = venue == null ? "" : venue.trim();
 
-            response.sendRedirect(
-                    "applicants?jobId=" + jobId
-            );
-
+        if (interviewDateParam == null || interviewDateParam.trim().isEmpty()
+                || interviewTimeParam == null || interviewTimeParam.trim().isEmpty()) {
+            redirectError(response, applicationIdParam, "invalid-date-time");
             return;
         }
 
-        String checkApplicationSql = """
-                SELECT a.status
-                FROM applications a
-                JOIN jobs j ON a.job_id = j.id
-                JOIN companies c ON j.company_id = c.id
-                WHERE a.id = ?
-                  AND a.job_id = ?
-                  AND c.user_id = ?
-                """;
+        if (!"ONLINE".equals(mode) && !"OFFLINE".equals(mode)) {
+            redirectError(response, applicationIdParam, "invalid-mode");
+            return;
+        }
 
-        String checkInterviewSql = """
-                SELECT id
-                FROM interviews
-                WHERE application_id = ?
-                """;
+        Date interviewDate;
+        Time interviewTime;
 
-        String insertInterviewSql = """
-                INSERT INTO interviews
-                (
-                    application_id,
-                    interview_date,
-                    interview_time,
-                    mode,
-                    meeting_link,
-                    venue
-                )
-                VALUES (?, ?, ?, ?, ?, ?)
-                """;
+        try {
+            interviewDate = Date.valueOf(interviewDateParam);
+            interviewTime = Time.valueOf(interviewTimeParam.length() == 5
+                    ? interviewTimeParam + ":00"
+                    : interviewTimeParam);
+        } catch (IllegalArgumentException e) {
+            redirectError(response, applicationIdParam, "invalid-date-time");
+            return;
+        }
 
-        String updateApplicationSql = """
-                UPDATE applications
-                SET status = 'INTERVIEW'
-                WHERE id = ?
-                """;
+        LocalDate date = interviewDate.toLocalDate();
+        LocalTime time = interviewTime.toLocalTime();
 
-        try (Connection connection =
-                     DBConnection.getConnection()) {
+        LocalDate today = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime interviewDateTime = LocalDateTime.of(date, time);
+
+        if (date.isBefore(today)) {
+            redirectError(response, applicationIdParam, "past-date");
+            return;
+        }
+
+        if (interviewDateTime.isBefore(now)) {
+            redirectError(response, applicationIdParam, "past-time");
+            return;
+        }
+
+        LocalTime startTime = LocalTime.of(9, 0);
+        LocalTime endTime = LocalTime.of(18, 0);
+
+        if (time.isBefore(startTime) || time.isAfter(endTime)) {
+            redirectError(response, applicationIdParam, "outside-hours");
+            return;
+        }
+
+        if ("ONLINE".equals(mode) && meetingLink.isEmpty()) {
+            redirectError(response, applicationIdParam, "online-link");
+            return;
+        }
+
+        if ("OFFLINE".equals(mode) && venue.isEmpty()) {
+            redirectError(response, applicationIdParam, "offline-venue");
+            return;
+        }
+
+        if ("ONLINE".equals(mode)) {
+            venue = "";
+        } else {
+            meetingLink = "";
+        }
+
+        Object userIdObject = session.getAttribute("userId");
+
+        if (userIdObject == null) {
+            response.sendRedirect(request.getContextPath() + "/login.html");
+            return;
+        }
+
+        long recruiterUserId;
+
+        try {
+            recruiterUserId = Long.parseLong(userIdObject.toString());
+        } catch (NumberFormatException e) {
+            response.sendRedirect(request.getContextPath() + "/login.html");
+            return;
+        }
+
+        String verifyApplicationSql =
+                "SELECT a.id " +
+                "FROM applications a " +
+                "JOIN jobs j ON a.job_id = j.id " +
+                "JOIN companies c ON j.company_id = c.id " +
+                "WHERE a.id = ? AND c.user_id = ?";
+
+        String latestInterviewSql =
+                "SELECT status " +
+                "FROM interviews " +
+                "WHERE application_id = ? " +
+                "ORDER BY id DESC " +
+                "LIMIT 1";
+
+        String insertInterviewSql =
+                "INSERT INTO interviews " +
+                "(application_id, interview_date, interview_time, mode, meeting_link, venue, status) " +
+                "VALUES (?, ?, ?, ?, ?, ?, 'SCHEDULED')";
+
+        String updateApplicationSql =
+                "UPDATE applications " +
+                "SET status = 'INTERVIEW' " +
+                "WHERE id = ?";
+
+        try (Connection con = DBConnection.getConnection()) {
 
             /*
-             * 1. Verify that this application belongs
-             *    to the recruiter's company.
+             * Verify that this application belongs to the logged-in recruiter.
              */
-            try (PreparedStatement statement =
-                         connection.prepareStatement(
-                                 checkApplicationSql)) {
+            try (PreparedStatement ps = con.prepareStatement(verifyApplicationSql)) {
 
-                statement.setLong(1, applicationId);
-                statement.setLong(2, jobId);
-                statement.setLong(3, recruiterUserId);
+                ps.setLong(1, applicationId);
+                ps.setLong(2, recruiterUserId);
 
-                try (ResultSet resultSet =
-                             statement.executeQuery()) {
+                try (ResultSet rs = ps.executeQuery()) {
 
-                    if (!resultSet.next()) {
-
-                        response.setContentType("text/html");
-
-                        response.getWriter().println(
-                                "<h2>Application not found.</h2>"
-                        );
-
-                        return;
-                    }
-
-                    String applicationStatus =
-                            resultSet.getString("status");
-
-                    /*
-                     * Interview should only be scheduled
-                     * for a shortlisted student.
-                     */
-                    if (!"SHORTLISTED".equals(
-                            applicationStatus)) {
-
-                        response.setContentType("text/html");
-
-                        response.getWriter().println(
-                                "<h2>Only shortlisted students can be scheduled for an interview.</h2>"
-                        );
-
-                        response.getWriter().println(
-                                "<a href='applicants?jobId="
-                                + jobId
-                                + "'>Back to Applicants</a>"
-                        );
-
-                        return;
-                    }
-                }
-            }
-
-            /*
-             * 2. Check whether an interview already exists.
-             */
-            try (PreparedStatement statement =
-                         connection.prepareStatement(
-                                 checkInterviewSql)) {
-
-                statement.setLong(1, applicationId);
-
-                try (ResultSet resultSet =
-                             statement.executeQuery()) {
-
-                    if (resultSet.next()) {
-
-                        response.setContentType("text/html");
-
-                        response.getWriter().println(
-                                "<h2>An interview is already scheduled for this application.</h2>"
-                        );
-
-                        response.getWriter().println(
-                                "<a href='applicants?jobId="
-                                + jobId
-                                + "'>Back to Applicants</a>"
-                        );
-
+                    if (!rs.next()) {
+                        redirectError(response, applicationIdParam, "unauthorized");
                         return;
                     }
                 }
             }
 
             /*
-             * 3. Insert interview.
+             * Check the latest interview.
+             *
+             * SCHEDULED  -> do not create duplicate.
+             * CANCELLED  -> new interview allowed.
+             * COMPLETED  -> new interview allowed.
              */
-            try (PreparedStatement statement =
-                         connection.prepareStatement(
-                                 insertInterviewSql)) {
+            try (PreparedStatement ps = con.prepareStatement(latestInterviewSql)) {
 
-                statement.setLong(1, applicationId);
+                ps.setLong(1, applicationId);
 
-                statement.setDate(
-                        2,
-                        Date.valueOf(interviewDate)
+                try (ResultSet rs = ps.executeQuery()) {
+
+                    if (rs.next()) {
+
+                        String status = rs.getString("status");
+
+                        if ("SCHEDULED".equals(status)) {
+                            redirectError(
+                                    response,
+                                    applicationIdParam,
+                                    "already-scheduled"
+                            );
+                            return;
+                        }
+                    }
+                }
+            }
+
+            con.setAutoCommit(false);
+
+            try {
+
+                try (PreparedStatement ps = con.prepareStatement(insertInterviewSql)) {
+
+                    ps.setLong(1, applicationId);
+                    ps.setDate(2, interviewDate);
+                    ps.setTime(3, interviewTime);
+                    ps.setString(4, mode);
+                    ps.setString(5, meetingLink.isEmpty() ? null : meetingLink);
+                    ps.setString(6, venue.isEmpty() ? null : venue);
+
+                    ps.executeUpdate();
+                }
+
+                try (PreparedStatement ps = con.prepareStatement(updateApplicationSql)) {
+
+                    ps.setLong(1, applicationId);
+                    ps.executeUpdate();
+                }
+
+                con.commit();
+
+                response.sendRedirect(
+                        request.getContextPath()
+                                + "/recruiter-interviews?success=true"
                 );
 
-                statement.setTime(
-                        3,
-                        Time.valueOf(
-                                interviewTime + ":00"
-                        )
-                );
+            } catch (Exception e) {
 
-                statement.setString(4, mode);
-
-                if (meetingLink == null ||
-                    meetingLink.trim().isEmpty()) {
-
-                    statement.setNull(
-                            5,
-                            java.sql.Types.VARCHAR
-                    );
-
-                } else {
-
-                    statement.setString(
-                            5,
-                            meetingLink
-                    );
+                try {
+                    con.rollback();
+                } catch (Exception rollbackException) {
+                    rollbackException.printStackTrace();
                 }
 
-                if (venue == null ||
-                    venue.trim().isEmpty()) {
-
-                    statement.setNull(
-                            6,
-                            java.sql.Types.VARCHAR
-                    );
-
-                } else {
-
-                    statement.setString(
-                            6,
-                            venue
-                    );
-                }
-
-                statement.executeUpdate();
+                throw e;
             }
-
-            /*
-             * 4. Change application status
-             *    from SHORTLISTED to INTERVIEW.
-             */
-            try (PreparedStatement statement =
-                         connection.prepareStatement(
-                                 updateApplicationSql)) {
-
-                statement.setLong(1, applicationId);
-
-                statement.executeUpdate();
-            }
-
-            /*
-             * 5. Go back to applicants page.
-             */
-            response.sendRedirect(
-                    "applicants?jobId=" + jobId
-            );
 
         } catch (Exception e) {
 
             e.printStackTrace();
 
-            response.setContentType("text/html");
-
-            response.getWriter().println(
-                    "<h2>Database error occurred.</h2>"
+            redirectError(
+                    response,
+                    applicationIdParam,
+                    "database"
             );
         }
+    }
+
+    private void redirectError(
+            HttpServletResponse response,
+            String applicationId,
+            String error
+    ) throws IOException {
+
+        response.sendRedirect(
+                "schedule-interview?applicationId="
+                        + applicationId
+                        + "&error="
+                        + error
+        );
     }
 }
