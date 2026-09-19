@@ -12,25 +12,41 @@ public class DBConnection {
             .ignoreIfMissing()
             .load();
 
-    private static final String URL =
-            dotenv.get(
-                    "DB_URL",
-                    "jdbc:mysql://localhost:3306/smart_placement"
-            );
+    private static String getConfig(String key, String defaultValue) {
+        String systemValue = System.getenv(key);
 
-    private static final String USER =
-            dotenv.get("DB_USER", "root");
+        if (systemValue != null && !systemValue.isBlank()) {
+            return systemValue;
+        }
 
-    private static final String PASSWORD =
-            dotenv.get("DB_PASSWORD");
+        String dotenvValue = dotenv.get(key);
 
-    public static Connection getConnection()
-            throws SQLException {
+        if (dotenvValue != null && !dotenvValue.isBlank()) {
+            return dotenvValue;
+        }
+
+        return defaultValue;
+    }
+
+    private static final String URL = getConfig(
+            "DB_URL",
+            "jdbc:mysql://localhost:3306/smart_placement"
+    );
+
+    private static final String USER = getConfig(
+            "DB_USER",
+            "root"
+    );
+
+    private static final String PASSWORD = getConfig(
+            "DB_PASSWORD",
+            null
+    );
+
+    public static Connection getConnection() throws SQLException {
 
         if (PASSWORD == null || PASSWORD.isBlank()) {
-            throw new SQLException(
-                    "DB_PASSWORD is not configured."
-            );
+            throw new SQLException("DB_PASSWORD is not configured.");
         }
 
         try {

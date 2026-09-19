@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -16,8 +16,8 @@
     <name>Smart Placement System</name>
 
     <properties>
-        <maven.compiler.source>26</maven.compiler.source>
-        <maven.compiler.target>26</maven.compiler.target>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -74,7 +74,7 @@
                 <version>3.14.0</version>
 
                 <configuration>
-                    <release>26</release>
+                    <release>25</release>
                 </configuration>
             </plugin>
 
