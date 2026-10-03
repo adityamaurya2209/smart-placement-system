@@ -1,6 +1,7 @@
 package com.smartplacement.servlet;
 
 import com.smartplacement.util.DBConnection;
+import com.smartplacement.util.PasswordUtil;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -25,18 +26,20 @@ public class LoginServlet extends HttpServlet {
         String email = request.getParameter("email");
         String password = request.getParameter("password");
 
-        String sql = "SELECT id, name, role FROM users " +
-                     "WHERE email = ? AND password = ?";
+        String sql = "SELECT id, name, role, password FROM users " +
+                     "WHERE email = ?";
 
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
-            statement.setString(1, email);
-            statement.setString(2, password);
+            statement.setString(1, email == null ? null : email.trim());
 
             ResultSet resultSet = statement.executeQuery();
 
-            if (resultSet.next()) {
+            if (resultSet.next()
+                    && PasswordUtil.verify(
+                            password,
+                            resultSet.getString("password"))) {
 
                 // Login successful
                 HttpSession session = request.getSession();
@@ -67,14 +70,7 @@ public class LoginServlet extends HttpServlet {
             } else {
 
                 // Login failed
-                response.setContentType("text/html");
-
-                response.getWriter().println(
-                    "<h2>Invalid email or password</h2>"
-                );
-                response.getWriter().println(
-                    "<a href='login.html'>Try Again</a>"
-                );
+                response.sendRedirect("login.html?error=1");
             }
 
         } catch (Exception e) {

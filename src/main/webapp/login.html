@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" type="image/svg+xml" href="images/brand/smart-placement-icon.svg">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Placement System - Login</title>
@@ -10,14 +12,18 @@
 <body class="login-page">
 
     <main class="login-box">
-        <div class="login-brand">
-            <div class="brand-mark">SP</div>
-        </div>
+        <img
+            class="login-logo"
+            src="images/brand/smart-placement-logo.svg"
+            alt="Smart Placement"
+        >
 
-        <h1>Smart Placement System</h1>
+        <h1>Welcome back</h1>
         <p class="login-subtitle">
             Sign in to manage your placement journey.
         </p>
+
+        <p id="auth-message" class="auth-alert" role="alert" hidden></p>
 
         <form action="login" method="post">
 
@@ -44,7 +50,33 @@
             <button type="submit">Sign In</button>
 
         </form>
+
+        <p class="auth-switch">
+            New to Smart Placement?
+            <a href="signup">Create an account</a>
+        </p>
     </main>
+
+    <script>
+        (function () {
+            const messages = {
+                error: ["error", "Invalid email or password."],
+                registered: ["success", "Account created successfully. Please sign in."]
+            };
+
+            const params = new URLSearchParams(window.location.search);
+            const key = Object.keys(messages).find(name => params.has(name));
+
+            if (!key) {
+                return;
+            }
+
+            const box = document.getElementById("auth-message");
+            box.classList.add(messages[key][0]);
+            box.textContent = messages[key][1];
+            box.hidden = false;
+        })();
+    </script>
 
 </body>
 </html>

@@ -3,6 +3,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" type="image/svg+xml" href="images/brand/smart-placement-icon.svg">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard | Smart Placement System</title>
@@ -11,7 +13,7 @@
 <body class="dashboard-page admin-dashboard-page">
 <header class="app-nav">
   <div class="app-nav-inner">
-    <a class="app-brand" href="admin-dashboard"><span class="brand-mark">SP</span><span>Smart Placement</span></a>
+    <a class="app-brand" href="admin-dashboard"><img class="brand-mark brand-logo" src="images/brand/smart-placement-icon.svg" alt=""><span>Smart Placement</span></a>
     <nav class="app-nav-links">
       <a class="active" href="admin-dashboard">Dashboard</a>
       <a href="admin-students">Students</a>

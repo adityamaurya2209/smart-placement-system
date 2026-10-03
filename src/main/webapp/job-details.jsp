@@ -4,6 +4,8 @@
 <html lang="en">
 
 <head>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" type="image/svg+xml" href="images/brand/smart-placement-icon.svg">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${job.title} | Smart Placement System</title>
@@ -16,7 +18,7 @@
 <header class="topbar">
     <div class="topbar-inner">
         <a class="brand" href="dashboard.html">
-            <span class="brand-mark">SP</span>
+            <img class="brand-mark brand-logo" src="images/brand/smart-placement-icon.svg" alt="">
             <span>Smart Placement</span>
         </a>
 

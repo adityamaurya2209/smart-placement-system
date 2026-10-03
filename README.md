@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="src/main/webapp/images/brand/smart-placement-logo.png" alt="Smart Placement logo" width="420">
+</p>
+
 # Smart Placement System
 
 A role-based web application developed to streamline the campus placement process for Students, Recruiters, and Administrators.
@@ -10,6 +14,7 @@ The system provides a centralized platform for managing students, companies, job
 
 ### 👨‍🎓 Student Module
 
+- Student self-registration (sign up)
 - Student login and authentication
 - Role-based access control
 - Student profile management
@@ -27,6 +32,7 @@ The system provides a centralized platform for managing students, companies, job
 
 ### 🏢 Recruiter Module
 
+- Recruiter self-registration with company details (sign up)
 - Recruiter login and authentication
 - Recruiter dashboard
 - Company profile management/view
@@ -178,6 +184,8 @@ The application communicates with MySQL using **JDBC** and prepared SQL statemen
 ## 🔐 Security & Access Control
 
 - Session-based authentication
+- PBKDF2-hashed passwords for newly registered accounts
+- Self-registration limited to Student and Recruiter roles
 - Role-based authorization
 - Student-only resources
 - Recruiter-only resources
@@ -275,6 +283,7 @@ smart-placement-system/
 │       └── webapp/
 │           ├── WEB-INF/
 │           ├── css/
+│           ├── images/brand/
 │           ├── admin-dashboard.jsp
 │           ├── admin-students.jsp
 │           ├── admin-recruiters.jsp
@@ -291,6 +300,7 @@ smart-placement-system/
 │           ├── job-details.jsp
 │           ├── jobs.jsp
 │           ├── login.html
+│           ├── signup.jsp
 │           ├── my-applications.jsp
 │           ├── profile.jsp
 │           ├── recruiter-dashboard.jsp
@@ -377,12 +387,19 @@ Login page:
 http://localhost:8080/smart-placement-system/login.html
 ```
 
+Sign-up page:
+
+```text
+http://localhost:8080/smart-placement-system/signup
+```
+
 ---
 
 ## 🧪 Testing
 
 ### Student
 
+- [x] Sign up
 - [x] Login
 - [x] Role protection
 - [x] Dashboard
@@ -398,6 +415,7 @@ http://localhost:8080/smart-placement-system/login.html
 
 ### Recruiter
 
+- [x] Sign up
 - [x] Login
 - [x] Dashboard
 - [x] Company information
