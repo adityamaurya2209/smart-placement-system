@@ -9,8 +9,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${job.title} | Smart Placement System</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/inner-ui.css">
+    <link rel="stylesheet" href="css/style.css?v=6">
+    <link rel="stylesheet" href="css/inner-ui.css?v=6">
 </head>
 
 <body class="sp-inner-page">

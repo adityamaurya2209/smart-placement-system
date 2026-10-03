@@ -8,8 +8,8 @@
 <head>
     <link rel="icon" href="favicon.ico" sizes="any">
     <link rel="icon" type="image/svg+xml" href="images/brand/smart-placement-icon.svg">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/inner-ui.css">
+    <link rel="stylesheet" href="css/style.css?v=6">
+    <link rel="stylesheet" href="css/inner-ui.css?v=6">
 
     <meta charset="UTF-8">
 
